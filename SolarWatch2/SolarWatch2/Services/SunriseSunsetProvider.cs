@@ -1,6 +1,7 @@
-﻿using Newtonsoft.Json;
-using SolarWatch2.Model;
+﻿using SolarWatch2.Model;
+using System.Globalization;
 using System.Net;
+using System.Text.Json;
 
 namespace SolarWatch2.Services
 {
@@ -13,19 +14,48 @@ namespace SolarWatch2.Services
             _logger = logger;
         }
 
-        public IEnumerable<SunriseSunsetResult> GetSunriseSunset(double lat, double lon, DateTime startDate, DateTime endDate)
+        public SunriseSunset GetSunriseSunset(double lat, double lon, DateTime date)
         {
-            var url = $"https://api.sunrise-sunset.org/json?lat={lat}&lng={lon}&start={startDate:yyyy-MM-dd}&end={endDate:yyyy-MM-dd}";
+            var url = $"https://api.sunrise-sunset.org/json?lat={lat}&lng={lon}&date={date:yyyy-MM-dd}";
+            var client = new WebClient();
 
-            _logger.LogInformation("Calling SunriseSunset API with url: {url}");
-
-            using (var client = new WebClient())
+            try
             {
                 var jsonString = client.DownloadString(url);
-                var result = JsonConvert.DeserializeObject<SunriseSunsetResult>(jsonString);
+                var result = JsonSerializer.Deserialize<ApiResult>(jsonString);
 
-                return new List<SunriseSunsetResult> { result.Results };
+                if (result != null && result.Results != null)
+                {
+                    var dateFormat = "h:mm:ss tt";
+                    var culture = CultureInfo.InvariantCulture;
+
+                    return new SunriseSunset
+                    {
+                        Date = date,
+                        Sunrise = DateTime.ParseExact(result.Results.Sunrise, dateFormat, culture),
+                        Sunset = DateTime.ParseExact(result.Results.Sunset, dateFormat, culture)
+                    };
+                }
             }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error getting SunriseSunset Data");
+            }
+
+            return null; // Or handle the error in a way that makes sense for your application
+        }
+
+        // Define a class to represent the structure of the JSON response
+        private class ApiResult
+        {
+            public Results Results { get; set; }
+            public string Status { get; set; }
+        }
+
+        private class Results
+        {
+            public string Sunrise { get; set; }
+            public string Sunset { get; set; }
         }
     }
 }

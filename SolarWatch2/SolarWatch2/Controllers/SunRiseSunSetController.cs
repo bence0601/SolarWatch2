@@ -19,11 +19,11 @@ namespace SolarWatch2.Controllers
         }
 
         [HttpGet("GetSunRiseSunSet")]
-        public ActionResult<IEnumerable<SunriseSunsetResult>> Get([Required] double lat, [Required] double lon, [Required] DateTime startDate, [Required] DateTime endDate)
+        public ActionResult<SunriseSunset> Get([Required] double lat, [Required] double lon, [Required] DateTime date)
         {
             try
             {
-                var sunriseSunset = _sunriseSunsetProvider.GetSunriseSunset(lat, lon, startDate, endDate);
+                var sunriseSunset = _sunriseSunsetProvider.GetSunriseSunset(lat, lon, date);
                 return Ok(sunriseSunset);
             }
             catch (Exception e)
