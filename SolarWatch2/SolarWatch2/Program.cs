@@ -1,4 +1,5 @@
 using SolarWatch2.Services;
+using SolarWatch2.Services.JSON;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,7 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-builder.Services.AddSingleton<ISunriseSunsetProvider, SunriseSunsetProvider>();
+builder.Services.AddSingleton<IJsonProcessor, JsonProcessor>();
+builder.Services.AddSingleton<IWeatherDataProvider, WeatherProvider>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

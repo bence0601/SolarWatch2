@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SolarWatch2.Model;
 using SolarWatch2.Services;
-using System.ComponentModel.DataAnnotations;
+using SolarWatch2.Services.JSON;
 
 namespace SolarWatch2.Controllers
 {
@@ -10,29 +10,28 @@ namespace SolarWatch2.Controllers
     public class SunRiseSunSetController : ControllerBase
     {
         private readonly ILogger<SunRiseSunSetController> _logger;
-        private readonly ISunriseSunsetProvider _sunriseSunsetProvider;
+        private readonly IWeatherDataProvider _weatherDataProvider;
+        private readonly IJsonProcessor _jsonProcessor;
 
-        public SunRiseSunSetController(ILogger<SunRiseSunSetController> logger, ISunriseSunsetProvider sunriseSunsetProvider)
+        public SunRiseSunSetController(ILogger<SunRiseSunSetController> logger, IWeatherDataProvider weatherDataProvider, IJsonProcessor jsonProcessor)
         {
             _logger = logger;
-            _sunriseSunsetProvider = sunriseSunsetProvider;
+            _weatherDataProvider = weatherDataProvider;
+            _jsonProcessor = jsonProcessor;
         }
 
-        [HttpGet("GetSunRiseSunSet")]
-        public ActionResult<SunriseSunset> Get([Required] double lat, [Required] double lon, [Required] DateTime date)
+
+        [HttpGet("GetByName")]
+        public async Task<ActionResult<SunriseSunsetResult>> GetSunriseSunset(string cityname, DateTime date)
         {
-            try
-            {
-                var sunriseSunset = _sunriseSunsetProvider.GetSunriseSunset(lat, lon, date);
-                return Ok(sunriseSunset);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Error getting SunriseSunset Data");
-                return NotFound("Error getting data");
-            }
+            var GeoData = await _weatherDataProvider.GetLatLon(cityname);
+            var GeoResult = _jsonProcessor.GetGeoCodingApiResponse(GeoData);
+            var lat = GeoResult.Lat;
+            var lon = GeoResult.Lon;
+            var sunrisesunsetresult = new SunriseSunsetResult();
+            Console.WriteLine($"{lat},{lon}");
+            return Ok(sunrisesunsetresult);
         }
-
 
     }
 }
